@@ -180,14 +180,7 @@ public class MockTabPanel extends JPanel implements ITab, MockAdder, HierarchyLi
             for (int i = 0; i < tabbedPane.getTabCount(); i++) {
                 if (tabbedPane.getComponentAt(i) == this) {
                     tabbedPane.setBackgroundAt(i, new Color(0xff6633));
-                    Timer timer = new Timer(3000, e -> {
-                        for (int j = 0; j < tabbedPane.getTabCount(); j++) {
-                            if (tabbedPane.getComponentAt(j) == MockTabPanel.this) {
-                                tabbedPane.setBackgroundAt(j, Color.BLACK);
-                                break;
-                            }
-                        }
-                    });
+                    Timer timer = new Timer(3000, e -> clearTabHighlight());
                     timer.setRepeats(false);
                     timer.start();
                     break;
@@ -196,21 +189,40 @@ public class MockTabPanel extends JPanel implements ITab, MockAdder, HierarchyLi
         }
     }
 
+    /**
+     * Restores the tab background to the theme default. Passing null (instead
+     * of a hardcoded color) reverts to the color provided by the current
+     * look and feel, so it works with both Burp light and dark themes.
+     */
+    private void clearTabHighlight() {
+        if (tabbedPane != null) {
+            for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+                if (tabbedPane.getComponentAt(i) == this) {
+                    tabbedPane.setBackgroundAt(i, null);
+                    break;
+                }
+            }
+        }
+    }
+
     @Override
     public void hierarchyChanged(HierarchyEvent e) {
-        tabbedPane = (JTabbedPane) getParent();
-        changeListener = e1 -> {
-            if (tabbedPane.getSelectedComponent() == MockTabPanel.this) {
-                tabbedPane.setBackgroundAt(tabbedPane.getSelectedIndex(), Color.BLACK);
-            }
-        };
-        tabbedPane.addChangeListener(changeListener);
-        removeHierarchyListener(this);
+        if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) != 0
+                && getParent() instanceof JTabbedPane) {
+            tabbedPane = (JTabbedPane) getParent();
+            changeListener = e1 -> {
+                if (tabbedPane.getSelectedComponent() == MockTabPanel.this) {
+                    clearTabHighlight();
+                }
+            };
+            tabbedPane.addChangeListener(changeListener);
+            removeHierarchyListener(this);
+        }
     }
 
     // call from extensionUnloaded
     void removeChangeListener() {
-        if (changeListener != null) {
+        if (changeListener != null && tabbedPane != null) {
             tabbedPane.removeChangeListener(changeListener);
         }
     }

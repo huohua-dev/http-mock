@@ -1,3 +1,6 @@
+## 1.1.7
+Fixed the suite tab turning black with barely readable text after clicking the HTTP Mock tab. The "new mock added" highlight now correctly reverts to the theme's default tab color (works in both light and dark Burp themes) instead of a hardcoded black.
+
 ## 1.1.6
 Fix reading old configuration files.
 
